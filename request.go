@@ -1,8 +1,19 @@
 package htmx
 
 import (
-	"net/http"
+	"github.com/gofiber/fiber/v3"
+	"github.com/samber/lo"
 )
+
+func hasHeaderTrue(header []string) bool {
+	return lo.ContainsBy(header, func(item string) bool {
+		return item == "true"
+	})
+}
+
+func getHeaderValue(header []string) (string, bool) {
+	return lo.First(header)
+}
 
 // IsHTMX returns true if the given request
 // was made by HTMX.
@@ -10,8 +21,8 @@ import (
 // This can be used to add special logic for HTMX requests.
 //
 // Checks if header 'HX-Request' is 'true'.
-func IsHTMX(r *http.Request) bool {
-	return r.Header.Get(HeaderRequest) == "true"
+func IsHTMX(c fiber.Ctx) bool {
+	return hasHeaderTrue(c.Req().GetHeaders()[HeaderRequest])
 }
 
 // IsBoosted returns true if the given request
@@ -22,26 +33,23 @@ func IsHTMX(r *http.Request) bool {
 // Checks if header 'HX-Boosted' is 'true'.
 //
 // For more info, see https://htmx.org/attributes/hx-boost/
-func IsBoosted(r *http.Request) bool {
-	return r.Header.Get(HeaderBoosted) == "true"
+func IsBoosted(c fiber.Ctx) bool {
+	return hasHeaderTrue(c.Req().GetHeaders()[HeaderBoosted])
 }
 
 // IsHistoryRestoreRequest returns true if the given request
 // is for history restoration after a miss in the local history cache.
 //
 // Checks if header 'HX-History-Restore-Request' is 'true'.
-func IsHistoryRestoreRequest(r *http.Request) bool {
-	return r.Header.Get(HeaderHistoryRestoreRequest) == "true"
+func IsHistoryRestoreRequest(c fiber.Ctx) bool {
+	return hasHeaderTrue(c.Req().GetHeaders()[HeaderHistoryRestoreRequest])
 }
 
 // GetCurrentURL returns the current URL that HTMX made this request from.
 //
 // Returns false if header 'HX-Current-URL' does not exist.
-func GetCurrentURL(r *http.Request) (string, bool) {
-	if _, ok := r.Header[http.CanonicalHeaderKey(HeaderCurrentURL)]; !ok {
-		return "", false
-	}
-	return r.Header.Get(HeaderCurrentURL), true
+func GetCurrentURL(c fiber.Ctx) (string, bool) {
+	return lo.First(c.Req().GetHeaders()[HeaderCurrentURL])
 }
 
 // GetPrompt returns the user response to an hx-prompt from a given request.
@@ -49,11 +57,8 @@ func GetCurrentURL(r *http.Request) (string, bool) {
 // Returns false if header 'HX-Prompt' does not exist.
 //
 // For more info, see https://htmx.org/attributes/hx-prompt/
-func GetPrompt(r *http.Request) (string, bool) {
-	if _, ok := r.Header[http.CanonicalHeaderKey(HeaderPrompt)]; !ok {
-		return "", false
-	}
-	return r.Header.Get(HeaderPrompt), true
+func GetPrompt(c fiber.Ctx) (string, bool) {
+	return lo.First(c.Req().GetHeaders()[HeaderPrompt])
 }
 
 // GetTarget returns the ID of the target element if it exists from a given request.
@@ -61,11 +66,8 @@ func GetPrompt(r *http.Request) (string, bool) {
 // Returns false if header 'HX-Target' does not exist.
 //
 // For more info, see https://htmx.org/attributes/hx-target/
-func GetTarget(r *http.Request) (string, bool) {
-	if _, ok := r.Header[http.CanonicalHeaderKey(HeaderTarget)]; !ok {
-		return "", false
-	}
-	return r.Header.Get(HeaderTarget), true
+func GetTarget(c fiber.Ctx) (string, bool) {
+	return lo.First(c.Req().GetHeaders()[HeaderTarget])
 }
 
 // GetTriggerName returns the 'name' of the triggered element if it exists from a given request.
@@ -73,11 +75,8 @@ func GetTarget(r *http.Request) (string, bool) {
 // Returns false if header 'HX-Trigger-Name' does not exist.
 //
 // For more info, see https://htmx.org/attributes/hx-trigger/
-func GetTriggerName(r *http.Request) (string, bool) {
-	if _, ok := r.Header[http.CanonicalHeaderKey(HeaderTriggerName)]; !ok {
-		return "", false
-	}
-	return r.Header.Get(HeaderTriggerName), true
+func GetTriggerName(c fiber.Ctx) (string, bool) {
+	return lo.First(c.Req().GetHeaders()[HeaderTriggerName])
 }
 
 // GetTrigger returns the ID of the triggered element if it exists from a given request.
@@ -85,9 +84,6 @@ func GetTriggerName(r *http.Request) (string, bool) {
 // Returns false if header 'HX-Trigger' does not exist.
 //
 // For more info, see https://htmx.org/attributes/hx-trigger/
-func GetTrigger(r *http.Request) (string, bool) {
-	if _, ok := r.Header[http.CanonicalHeaderKey(HeaderTrigger)]; !ok {
-		return "", false
-	}
-	return r.Header.Get(HeaderTrigger), true
+func GetTrigger(c fiber.Ctx) (string, bool) {
+	return lo.First(c.Req().GetHeaders()[HeaderTrigger])
 }

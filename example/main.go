@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/angelofallars/htmx-go"
+	"github.com/cemkeylan/htmx-gofiber"
+	"github.com/gofiber/fiber/v3"
 )
 
 func main() {
@@ -28,10 +29,10 @@ func main() {
 	fmt.Println(r.Headers())
 }
 
-func myHandler(w http.ResponseWriter, r *http.Request) {
-	if !htmx.IsHTMX(r) {
-		w.Write([]byte("only HTMX requests allowed"))
-		w.WriteHeader(http.StatusBadRequest)
+func myHandler(c fiber.Ctx) {
+	if !htmx.IsHTMX(c) {
+		c.Response().SetStatusCode(http.StatusBadRequest)
+		c.Write([]byte("only HTMX requests allowed"))
 		return
 	}
 
@@ -44,5 +45,5 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 		}).
 		Refresh(false)
 
-	writer.Write(w)
+	writer.Write(c)
 }

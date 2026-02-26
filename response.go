@@ -1,11 +1,11 @@
 package htmx
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"html/template"
-	"net/http"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 // Response contains HTMX headers to write to a response.
@@ -53,7 +53,7 @@ func (r Response) Clone() Response {
 }
 
 // Write applies the defined HTMX headers to a given response writer.
-func (r Response) Write(w http.ResponseWriter) error {
+func (r Response) Write(c fiber.Ctx) error {
 	if len(r.locationWithContextErr) > 0 {
 		return errors.Join(r.locationWithContextErr...)
 	}
@@ -63,38 +63,37 @@ func (r Response) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	headerWriter := w.Header()
 	for k, v := range headers {
-		headerWriter.Set(k, v)
+		c.Response().Header.Set(k, v)
 	}
 
 	// Status code needs to be written after the other headers
 	// so the other headers can be written
 	if r.statusCode != 0 {
-		w.WriteHeader(r.statusCode)
+		c.Response().SetStatusCode(r.statusCode)
 	}
 
 	return nil
 }
 
 // RenderHTML renders an HTML document fragment along with the defined HTMX headers.
-func (r Response) RenderHTML(w http.ResponseWriter, html template.HTML) (int, error) {
-	err := r.Write(w)
+func (r Response) RenderHTML(c fiber.Ctx, html template.HTML) (int, error) {
+	err := r.Write(c)
 	if err != nil {
 		return 0, err
 	}
 
-	return w.Write([]byte(html))
+	return c.Write([]byte(html))
 }
 
 // RenderTempl renders a Templ component along with the defined HTMX headers.
-func (r Response) RenderTempl(ctx context.Context, w http.ResponseWriter, c templComponent) error {
-	err := r.Write(w)
+func (r Response) RenderTempl(c fiber.Ctx, component templComponent) error {
+	err := r.Write(c)
 	if err != nil {
 		return err
 	}
 
-	err = c.Render(ctx, w)
+	err = component.Render(c, c.Response().BodyWriter())
 	if err != nil {
 		return err
 	}
@@ -105,8 +104,8 @@ func (r Response) RenderTempl(ctx context.Context, w http.ResponseWriter, c temp
 // MustWrite applies the defined HTMX headers to a given response writer, otherwise it panics.
 //
 // Under the hood this uses [Response.Write].
-func (r Response) MustWrite(w http.ResponseWriter) {
-	err := r.Write(w)
+func (r Response) MustWrite(c fiber.Ctx) {
+	err := r.Write(c)
 	if err != nil {
 		panic(err)
 	}
@@ -115,8 +114,8 @@ func (r Response) MustWrite(w http.ResponseWriter) {
 // MustRenderHTML renders an HTML document fragment along with the defined HTMX headers, otherwise it panics.
 //
 // Under the hood this uses [Response.RenderHTML].
-func (r Response) MustRenderHTML(w http.ResponseWriter, html template.HTML) {
-	_, err := r.RenderHTML(w, html)
+func (r Response) MustRenderHTML(c fiber.Ctx, html template.HTML) {
+	_, err := r.RenderHTML(c, html)
 	if err != nil {
 		panic(err)
 	}
@@ -125,8 +124,8 @@ func (r Response) MustRenderHTML(w http.ResponseWriter, html template.HTML) {
 // MustRenderTempl renders a Templ component along with the defined HTMX headers, otherwise it panics.
 //
 // Under the hood this uses [Response.RenderTempl].
-func (r Response) MustRenderTempl(ctx context.Context, w http.ResponseWriter, c templComponent) {
-	err := r.RenderTempl(ctx, w, c)
+func (r Response) MustRenderTempl(c fiber.Ctx, component templComponent) {
+	err := r.RenderTempl(c, component)
 	if err != nil {
 		panic(err)
 	}
