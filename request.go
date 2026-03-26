@@ -1,18 +1,28 @@
 package htmx
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/samber/lo"
 )
 
-func hasHeaderTrue(header []string) bool {
-	return lo.ContainsBy(header, func(item string) bool {
-		return item == "true"
-	})
+func hasHeaderTrue(c fiber.Ctx, header string) bool {
+	for key, value := range c.Req().GetHeaders() {
+		if strings.EqualFold(key, header) {
+			return lo.FirstOrEmpty(value) == "true"
+		}
+	}
+	return false
 }
 
-func getHeaderValue(header []string) (string, bool) {
-	return lo.First(header)
+func getHeaderValue(c fiber.Ctx, header string) (string, bool) {
+	for key, value := range c.Req().GetHeaders() {
+		if strings.EqualFold(key, header) {
+			return lo.First(value)
+		}
+	}
+	return "", false
 }
 
 // IsHTMX returns true if the given request
@@ -22,7 +32,7 @@ func getHeaderValue(header []string) (string, bool) {
 //
 // Checks if header 'HX-Request' is 'true'.
 func IsHTMX(c fiber.Ctx) bool {
-	return hasHeaderTrue(c.Req().GetHeaders()[HeaderRequest])
+	return hasHeaderTrue(c, HeaderRequest)
 }
 
 // IsBoosted returns true if the given request
@@ -34,7 +44,7 @@ func IsHTMX(c fiber.Ctx) bool {
 //
 // For more info, see https://htmx.org/attributes/hx-boost/
 func IsBoosted(c fiber.Ctx) bool {
-	return hasHeaderTrue(c.Req().GetHeaders()[HeaderBoosted])
+	return hasHeaderTrue(c, HeaderBoosted)
 }
 
 // IsHistoryRestoreRequest returns true if the given request
@@ -42,14 +52,14 @@ func IsBoosted(c fiber.Ctx) bool {
 //
 // Checks if header 'HX-History-Restore-Request' is 'true'.
 func IsHistoryRestoreRequest(c fiber.Ctx) bool {
-	return hasHeaderTrue(c.Req().GetHeaders()[HeaderHistoryRestoreRequest])
+	return hasHeaderTrue(c, HeaderHistoryRestoreRequest)
 }
 
 // GetCurrentURL returns the current URL that HTMX made this request from.
 //
 // Returns false if header 'HX-Current-URL' does not exist.
 func GetCurrentURL(c fiber.Ctx) (string, bool) {
-	return lo.First(c.Req().GetHeaders()[HeaderCurrentURL])
+	return getHeaderValue(c, HeaderCurrentURL)
 }
 
 // GetPrompt returns the user response to an hx-prompt from a given request.
@@ -58,7 +68,7 @@ func GetCurrentURL(c fiber.Ctx) (string, bool) {
 //
 // For more info, see https://htmx.org/attributes/hx-prompt/
 func GetPrompt(c fiber.Ctx) (string, bool) {
-	return lo.First(c.Req().GetHeaders()[HeaderPrompt])
+	return getHeaderValue(c, HeaderPrompt)
 }
 
 // GetTarget returns the ID of the target element if it exists from a given request.
@@ -67,7 +77,7 @@ func GetPrompt(c fiber.Ctx) (string, bool) {
 //
 // For more info, see https://htmx.org/attributes/hx-target/
 func GetTarget(c fiber.Ctx) (string, bool) {
-	return lo.First(c.Req().GetHeaders()[HeaderTarget])
+	return getHeaderValue(c, HeaderTarget)
 }
 
 // GetTriggerName returns the 'name' of the triggered element if it exists from a given request.
@@ -76,7 +86,7 @@ func GetTarget(c fiber.Ctx) (string, bool) {
 //
 // For more info, see https://htmx.org/attributes/hx-trigger/
 func GetTriggerName(c fiber.Ctx) (string, bool) {
-	return lo.First(c.Req().GetHeaders()[HeaderTriggerName])
+	return getHeaderValue(c, HeaderTriggerName)
 }
 
 // GetTrigger returns the ID of the triggered element if it exists from a given request.
@@ -85,5 +95,5 @@ func GetTriggerName(c fiber.Ctx) (string, bool) {
 //
 // For more info, see https://htmx.org/attributes/hx-trigger/
 func GetTrigger(c fiber.Ctx) (string, bool) {
-	return lo.First(c.Req().GetHeaders()[HeaderTrigger])
+	return getHeaderValue(c, HeaderTrigger)
 }
