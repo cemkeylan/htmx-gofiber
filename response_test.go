@@ -3,7 +3,6 @@ package htmx
 import (
 	"html/template"
 	"io"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -86,29 +85,4 @@ func TestMustRenderHTML(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "http://localhost", nil)
 	_, _ = app.Test(req)
-}
-
-type mockResponseWriter struct {
-	body       []byte
-	statusCode int
-	header     http.Header
-}
-
-func newMockResponseWriter() *mockResponseWriter {
-	return &mockResponseWriter{
-		header: http.Header{},
-	}
-}
-
-func (mrw *mockResponseWriter) Header() http.Header {
-	return mrw.header
-}
-
-func (mrw *mockResponseWriter) Write(b []byte) (int, error) {
-	mrw.body = append(mrw.body, b...)
-	return 0, nil
-}
-
-func (mrw *mockResponseWriter) WriteHeader(statusCode int) {
-	mrw.statusCode = statusCode
 }
